@@ -1,52 +1,95 @@
 ## golang
+
 - init() 函数是什么时候执行的？
-    - 参考答案init() 函数是 Go 程序初始化的一部分。Go 程序初始化先于 main 函数，由 runtime 初始化每个导入的包，初始化顺序不是按照从上到下的导入顺序，而是按照解析的依赖关系，没有依赖的包最先初始化。
 
-    - 每个包首先初始化包作用域的常量和变量（常量优先于变量），然后执行包的 init() 函数。同一个包，甚至是同一个源文件可以有多个 init() 函数。init() 函数没有入参和返回值，不能被其他函数调用，同一个包内多个 init() 函数的执行顺序不作保证。
+  - init() 函数是 Go 程序初始化的一部分。Go 程序初始化先于 main 函数，由 runtime 初始化每个导入的包，初始化顺序不是按照从上到下的导入顺序，而是按照解析的依赖关系，没有依赖的包最先初始化。
 
-    - 一句话总结： import –> const –> var –> init() –> main()
+  - 每个包首先初始化包作用域的常量和变量（常量优先于变量），然后执行包的 init() 函数。同一个包，甚至是同一个源文件可以有多个 init() 函数。init() 函数没有入参和返回值，不能被其他函数调用，同一个包内多个 init() 函数的执行顺序不作保证。
+
+  - 一句话总结： import –> const –> var –> init() –> main()
+
 - channel的应用场景
-    - 如果面试官问的比较笼统可以从一下几个方面回答
-        - 是什么
-        - 有什么特性
-        - 怎么用
+
+  - 如果面试官问的比较笼统可以从一下几个方面回答
+    - 是什么
+      -  channel 是可以在协程间进行通信的原语
+    - 有什么特性
+      - 主要用于协程间的通信，保证数据同步。
+    - 怎么用
+      - 在go func 代码中，加入缓冲或者无缓冲的channel，缓冲代表的是，多个go协程的管理，类似生产者、消费者，无缓冲是协程之间的同步关系，类似转账。
+
 - go channel使用需要注意的地方
   ![image](https://user-images.githubusercontent.com/31843331/153333030-3ca372b8-53c8-41db-ba86-ac89b9de636d.png)
 
 - 如何主动关闭goroutine
 
+  - 使用channel或者centext进行goroutine的控制
+
 - goroutine和线程有什么区别
 
+  - 1. 用户态管理，避免用户态到内核态的上下文切换，且创建和销毁的代价更小。
+    2. 栈空间小，初始只有2k
+    3. 通过GMP模式调度，一个线程可以执行多个协程。
+    4. go协程是主要是协作式调度，当M或者P空闲时，会主动去找待运行的G，而线程则是周期性的进行线程的上下文切换
+
 - 为什么goroutine的调度更高效
-    - 用户态避免上下文切换（避免用户态到内核态的切换）
 
-    - 创建与销毁的开销更小，通过goroutine runtime
+  - 用户态避免上下文切换（避免用户态到内核态的切换）
 
-    - 内存消耗更少，大约一个groutine的大小为3kb
+  - 创建与销毁的开销更小，通过goroutine runtime
+
+  - 内存消耗更少，大约一个groutine的大小为3kb
+
+    
 
 
 - 什么是死锁？go什么情况会死锁？怎么避免死锁问题？
+
+  - 当程序进行写操作加锁，然后又进行加锁；
+  - 当一个无缓冲的channel发送，没有接受者，或者接受没有数据，阻塞
+  - 加锁要小心，无缓冲的channel发送，就要有接收者。
+
 - go sync包有哪些方法以及具体作用
+
+  - waitgroup、syncmap、once、mutex、RWMutex、pool、cond
+
 - go context包的作用
+
+  - 协程间通信，控制子进程的退出。
+
 - 字节对齐和大小端序
-    - [解答](https://www.yuque.com/docs/share/2f155ad2-4b48-415a-acf6-5ca11571d3db)
+
+  - [解答](https://www.yuque.com/docs/share/2f155ad2-4b48-415a-acf6-5ca11571d3db)
+
 - golang gc 操作系统不真实释放内存怎么办
+
 - context原理
+
+  待解答
+
 - single—flight实现原理
+
+  待实践和解答
+
 - 延迟队列
-    - 参看zinx时间轮
+
+  - 参看zinx时间轮
+
 - go-micro 的模块分为哪些
-    - 组件
-        - Go Micro
-        - API
-        - Sidecar
-        - Web
-        - Cli
-        - Bot
+
+  - 组件
+    - Go Micro
+    - API
+    - Sidecar
+    - Web
+    - Cli
+    - Bot
+
 ## grpc
+
 - grpc通信类型
-    - 四种
-    - 一元 流式，客户端和服务器分别凑合就可以，一共四种
+  - 四种
+  - 一元 流式，客户端和服务器分别凑合就可以，一共四种
 - grpc为什么要使用http2.0当传输层协议？
 - grpc如何实现负载均衡
 
@@ -54,94 +97,112 @@
 
 - 两个客户端A,B A读取数据，B修改还未提交，A再次读取，A两次读取的消息是一致的吗？
 - grpc 版本字段增加，服务端客户端如何升级？先后顺序是什么
-    - 先升级服务端，后升级客户端
-    - 如果字段修改- 保持将修改参数改为增加一个新的字段，先升级服务器，再升级客户端
-        - 然后等客户端升级
-        - 然后服务端删除老字段
-        - 然后服务器在舍掉该字段
+  - 先升级服务端，后升级客户端
+  - 如果字段修改- 保持将修改参数改为增加一个新的字段，先升级服务器，再升级客户端
+    - 然后等客户端升级
+    - 然后服务端删除老字段
+    - 然后服务器在舍掉该字段
 - 如何设计一个10亿访问量的系统
 
 - gin和beego的区别
-    - 对mvc的支持
-        - beego支持完整的mvc
-        - gin不支持完整的mvc
-    - 对路由的支持
-        - Beego 支持正则路由，支持restful Controller路由
-        - Gin不支持正则路由
-    - 适用场景
-        - 在业务更加复杂的项目，适用beego
-        - 在需要快速开发的项目，适用beego
-    - Gin在性能方面较beego更好
-        - 当某个接口性能遭到较大的挑战，考虑用Gin重写
-        - 如果项目的规模不大，业务相对简单，适用Gin
+  - 对mvc的支持
+    - beego支持完整的mvc
+    - gin不支持完整的mvc
+  - 对路由的支持
+    - Beego 支持正则路由，支持restful Controller路由
+    - Gin不支持正则路由
+  - 适用场景
+    - 在业务更加复杂的项目，适用beego
+    - 在需要快速开发的项目，适用beego
+  - Gin在性能方面较beego更好
+    - 当某个接口性能遭到较大的挑战，考虑用Gin重写
+    - 如果项目的规模不大，业务相对简单，适用Gin
 
 - go-micro 的优缺点（微服务的优缺点）
-    - 优点：逻辑清晰，简化部署，可扩展，灵活组合，技术异构，高可靠
-    - 缺点：复杂度高，运维复杂，影响性能
+  - 优点：逻辑清晰，简化部署，可扩展，灵活组合，技术异构，高可靠
+  - 缺点：复杂度高，运维复杂，影响性能
 - go-micro存在的意义
 - grpc 加密
-    - jwt
+  - jwt
 
 - emao<-a<-b<-c, abc 任何一个出错，abc都退出，最后emo退出
 - channel关闭需要注意什么事情？
-    - 生产者关闭
-    - 多个写入者时，需要在外城使用一个WaitGroup，等所有写入者完成之后再关闭.
-    - 只读channel不需要关闭
+  - 生产者关闭
+  - 多个写入者时，需要在外城使用一个WaitGroup，等所有写入者完成之后再关闭.
+  - 只读channel不需要关闭
 - 索引如何优化？
-    - 查看数据库相关
+  - 查看数据库相关
 
 - go中哪些是值类型，哪些是引用类型
-    - 引用类型：指针，map，slice，channel，方法与函数
-    - 值类型：int系列、float系列、bool、string、数组和结构体
+  - 引用类型：指针，map，slice，channel，方法与函数
+  - 值类型：int系列、float系列、bool、string、数组和结构体
 
 - 值传递和引用传递的区别
-    - golang中只有值传递
+  - golang中只有值传递
 - 切片传递过去，如果被调用函数append()，原来的切片会不会变化
-    - append会修改slice所使用的底层数组，如果数组的不需要扩容会影响原来的切片；如果扩容则会引用新的数组，不会影响原切片；
+  - append会修改slice所使用的底层数组，如果数组的不需要扩容会影响原来的切片；如果扩容则会引用新的数组，不会影响原切片；
 
 
 - 如何确认二个map是否相等
-    - reflect.DeepEqual(c1, c2)，可以是map，slice，struct
+  - reflect.DeepEqual(c1, c2)，可以是map，slice，struct
 - cas  修改一块内存的值，值改变方式是a-b-a这个合理吗
-    - 什么事ABA问题
-        - 线程1，期望值为A，欲更新的值为B
-        - 线程2，期望值为A，欲更新的值为B
-        - 线程1抢先获得CPU时间片，而线程2因为其他原因阻塞
-        - 线程1取值与期望的A值比较，发现相等然后将值更新为B
-        - 线程3，期望值为B，欲更新的值为A，线程3取值与期望的值B比较，发现相等则将值更新为A
-        - 线程2从阻塞中恢复，并且获得了CPU时间片，这时候线程2取值与期望的值A比较，发现相等则将值更新为B
-        - 虽然线程2也完成了操作，但是线程2并不知道值已经经过了A->B->A的变化过程
-    -
-    - 如何解决ABA问题
-        - 在变量前面加上版本号，每次变量更新的时候变量的版本号都+1，即A->B->A就变成了1A->2B->3A
+  - 什么事ABA问题
+    - 线程1，期望值为A，欲更新的值为B
+    - 线程2，期望值为A，欲更新的值为B
+    - 线程1抢先获得CPU时间片，而线程2因为其他原因阻塞
+    - 线程1取值与期望的A值比较，发现相等然后将值更新为B
+    - 线程3，期望值为B，欲更新的值为A，线程3取值与期望的值B比较，发现相等则将值更新为A
+    - 线程2从阻塞中恢复，并且获得了CPU时间片，这时候线程2取值与期望的值A比较，发现相等则将值更新为B
+    - 虽然线程2也完成了操作，但是线程2并不知道值已经经过了A->B->A的变化过程
+      -
+  - 如何解决ABA问题
+    - 在变量前面加上版本号，每次变量更新的时候变量的版本号都+1，即A->B->A就变成了1A->2B->3A
 - mutex的原理
-    - [refer](https://www.processon.com/view/link/6078e4416376891132d67bcf)
+  - [refer](https://www.processon.com/view/link/6078e4416376891132d67bcf)
 
 - 说说常用的设计模式
 
 - slice的扩容规则（sixin）
 
 ## GC
+
 - 1. go gc 为何是非分代的？
+
     - [refer](https://lingchao.xin/post/why-golang-garbage-collector-not-implement-generational-and-compact-gc.html)
+
 - 2. go gc 为何是非紧缩的?
+
     - [refer](https://lingchao.xin/post/why-golang-garbage-collector-not-implement-generational-and-compact-gc.html)
     - [refer](https://www.jianshu.com/p/f1d62dcb0d76)
+
 - 3. 并发三色标记扫描是什么？
+
 - 4. go 如何实现的 并发三色标记扫描？
+
 - 5. 强三色不变性和弱三色不变性的含义？
+
 - 6. gc是为何需要写屏障？
+
 - 7. 插入写屏障和删除写屏障的时机和区别？go中如何实现的？
+
 - 8. GC 的四个阶段？
+
 - 9. 为何需要辅助标记和辅助清扫？
+
 - 10. GC 4个阶段，STW发生在何时？
+
 - 11. 描述下 gc 调步算法的实现？
+
 - 12. 工作中gc debug的使用？
+
 - 13. gc 清扫阶段 对象回收 和 内存单元回收的联系和差异？
+
 - 14. 三色法为什么需要灰色
+
     - [refer](https://stackoverflow.com/questions/9285741/why-white-gray-black-in-gc#:~:text=2%20Answers&text=Gray%20means%20%22live%20but%20not,do%20a%20bit%20of%20marking.\)
 
 ## 说出打印结果（探探）
+
 ```go
 type query func(string) string
 
@@ -170,11 +231,13 @@ func main() {
 }
 ```
 
+随机出现
+
 - 给出方法定义
-  - 实现 errgroup.Group
+  - 实现 errgroup.Group wait()  Add() Done()
   - 实现 singleflight.Group
 
-- [腾讯］使用golang实现一个端口监听的程序。
+- [腾讯］使用golang实现一个端口监听的程序。http监听，程序的优雅启动、优雅退出。
 
 - 内存对齐（from 不是山谷）
   - [链接答案](https://www.yuque.com/docs/share/2f155ad2-4b48-415a-acf6-5ca11571d3db)
@@ -184,7 +247,7 @@ func main() {
   - (1)、select机制用来处理异步IO问题
   - (2)、select机制最大的一条限制就是每个case语句里必须是一个IO操作
   - (3)、golang在语言级别支持select关键字
-  
+
 - 1.项目中用到的锁
 
 - 2.介绍一下线程安全的共享内存方式
@@ -193,75 +256,50 @@ func main() {
 
 - 4.goroutine的自旋占用资源如何解决,gmp
 
-- 5.介绍Linux系统信号
+- 5.介绍Linux系统信号 kill exit
 
-- 6.goroutine抢占时机,gc栈扫描
+- 6.goroutine抢占时机,gc栈扫描   
 
-- 7.Gc触发时机
+- 7.Gc触发时机，并发的
 
 - 8.是否了解其他gc机制
 
 
 - 10.Channel分配在堆上还是在栈上？哪些对象分配在堆上？哪些对象分配在栈上？
-
 - 11.代码效率分析，考虑局部性原理
-
 - 12.多核CPU下，cache如何保持一致，不冲突
-
-- 13.uint类型溢出
-
+- 13.uint类型溢出  改为bigint或者string
 - 14.聊聊rune类型
-
 - 15.介绍一下channel，有缓冲和无缓冲的区别
-
-- 16.channel是否线程安全
-
+- 16.channel是否线程安全  安全
 - 17.介绍一下Mutex的实现,是悲观锁还是乐观锁
-
 - 18.Mutex几种模式?
-
 - 19.Muxtez可以做自旋锁?
-
 - 20.介绍一下RWMutex
-
-- 21.介绍一下大对象和小对象，为什么小对象多了会造成gc压力？
-
+- 21.介绍一下大对象和小对象，为什么小对象多了会造成gc压力？会频繁gc
 - 22.介绍项目中遇到的oop情况
-
 - 23.介绍项目中遇到的坑
-
 - 24.如果指定指令执行的顺序
-
 - 25.什么是写屏障、混合写屏障，如何实现？
-
 - 26.gc的stw是怎么回事
-
-- 27.协程之间是怎么调度的
-
-- 28.简单聊聊内存逃逸
-
+- 27.协程之间是怎么调度的 GMP
+- 28.简单聊聊内存逃逸  是否被引用，逃逸到堆上
 - 29.为什么sync.WaitGroup中Wait函数支持 WaitTimeout 功能.
-
-- 30.字符串转成byte数组，会发生内存拷贝吗？
-
+- 30.字符串转成byte数组，会发生内存拷贝吗？直接转，会，可以通过unsafe直接将指向的地址换了
 - 31.http包的内存泄漏
-
 - 32.Goroutine调度策略
-
-- 33.对已经关闭的的chan进行读写，会怎么样？为什么？
-
+- 33.对已经关闭的的chan进行读写，会怎么样？为什么？ 写会panic，go源码就是这样是实现的，由写入者保证关闭，可以使用读ok来判断是否关闭，读只能读到默认值。
 - 34.实现阻塞读的并发安全Map
-
 - 35.什么是goroutine leak？
-
 - 36.data race问题怎么解决？能不能不加锁解决这个问题？
-- grpc内部原理是什么
+  - 使用aotmic原子操作
+- grpc内部原理是什么  rpc原理
 - time.Now有几次系统调用？如何优化
-- 空struct{}是否使用过？会在什么情况下使用，举例说明一下
+- 空struct{}是否使用过？会在什么情况下使用，举例说明一下 map的value值无意义，chan只是为了通知
 - 聊聊runtime
-- 介绍下你平时都是怎么调试bug以及性能问题的?
+- 介绍下你平时都是怎么调试bug以及性能问题的?  pprof、gdb、日志、benchTest
 - 通过通信来共享内存，而不是通过共享内存而通信，怎么理解这句话，如何处理共享变量？
-- chan比mutex更轻么？还有更轻量的方法么？
+- chan比mutex更轻么？还有更轻量的方法么？ 重，chan是带了mutex，automic
 - 什么时候用chan不如mutex效率高？
 - 什么场景下会触发panic
   - 数组越界
@@ -273,22 +311,23 @@ func main() {
   - 重复关闭chan
   - 关闭未初始化的chan
   - sync.waitGroup计数为负数
-- 什么事hash冲突，go中map如何解决hash冲突？
-- 多个携程间的通信方法
-- 除了mutex以外还有哪些方式安全读写共享变量
-- 用过什么包管理工具
-- golang的服务性能指标怎么查看，有哪些指标需要注
-- 协程池的意义是什么
+- 什么事hash冲突，go中map如何解决hash冲突？ 链表寻址+桶
+- 多个携程间的通信方法  channel, 锁的全局变量
+- 除了mutex以外还有哪些方式安全读写共享变量  automic channel  context
+- 用过什么包管理工具 go mod 
+- golang的服务性能指标怎么查看，有哪些指标需要注  pprof 
+- 协程池的意义是什么  
 - 8、Go 当中同步锁有什么特点？作用是什么
-    - 当一个 Goroutine（协程）获得了 Mutex 后，其他 Goroutine（协程）就只能乖乖的等待，除非该 Goroutine 释放了该 Mutex。RWMutex 在读锁占用的情况下， 会阻止写，但不阻止读 RWMutex。 在写锁占用情况下，会阻止任何其他Goroutine（无论读和写）进来，整个锁相当于由该 Goroutine 独占
+  - 当一个 Goroutine（协程）获得了 Mutex 后，其他 Goroutine（协程）就只能乖乖的等待，除非该 Goroutine 释放了该 Mutex。RWMutex 在读锁占用的情况下， 会阻止写，但不阻止读 RWMutex。 在写锁占用情况下，会阻止任何其他Goroutine（无论读和写）进来，整个锁相当于由该 Goroutine 独占
     同步锁的作用是保证资源在使用时的独有性，不会因为并发而导致数据错乱， 保证系统的稳定性。
-   
+
 ## channel 
+
 - channel阻塞和非阻塞内部实现
 - Channel 的 ring buffer 实现
-    -channel 中使用了 ring buffer（环形缓冲区) 来缓存写入的数据。ring buffer 有很多好处，而且非常适合用来实现 FIFO 式的固定长度队列。在 channel 中，ring buffer 的实现如下：
+  -channel 中使用了 ring buffer（环形缓冲区) 来缓存写入的数据。ring buffer 有很多好处，而且非常适合用来实现 FIFO 式的固定长度队列。在 channel 中，ring buffer 的实现如下：
 - Channel可以嵌套使用吗？即往channel里发送一个channel
-    - 可以
+  - 可以
 
 - 与其他语言相比，使用GO 有什么好处？
 - GO 支持什么形式的类型转换？将整数转换为浮点数
@@ -382,17 +421,17 @@ fmt.Println(x,y,z,k,p)
   ![image](https://user-images.githubusercontent.com/31843331/153559726-7a20134f-4dbd-4100-bb24-21ff774a4f45.png)
 
 - 账号系统怎么做认证的 session和cookie
-- 线上qps多少
+- 线上qps多少  2000左右的登陆TPS
 - 为什么用channel来控制协程数量，协程太多会timeout
 - 分配在栈上和分配在堆上有什么区别，分配在栈上有什么好处
-    - 参考：
-    - 栈的内存管理简单，分配比堆上快
-    - 栈的内存不需要回收，堆需要主动free
-    - 栈的内存访问有更好的局部性，堆上的访问速度比栈上的速度要慢
+  - 参考：
+  - 栈的内存管理简单，分配比堆上快
+  - 栈的内存不需要回收，堆需要主动free
+  - 栈的内存访问有更好的局部性，堆上的访问速度比栈上的速度要慢
 
 - 怎么获取当前goroutine的数量，怎么获取当前goroutine的id
-    - run.NumGoroutines()
-    - goid 从runtime.stack上获取
+  - run.NumGoroutines()
+  - goid 从runtime.stack上获取
 
 - 线程间的通信方式一般有哪几种锁
 - golang map[string]interface{}做形参能否传入，map[string]string
@@ -403,48 +442,56 @@ fmt.Println(x,y,z,k,p)
 - grpc为什么高效
 
 ## map + sync map
+
 - map深拷贝浅拷贝
 - slice和map的扩容机制，map扩容时读数据怎么处理的
 - map实现及底层原理？(sixin)
-    - [go 设计与实现](https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/#%E6%89%A9%E5%AE%B9)
+  - [go 设计与实现](https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/#%E6%89%A9%E5%AE%B9)
 - 如何手动设计一个map
 - 有一个写多读少的场景，怎么设计高性能map
 - map 锁+map sync.map concurrentmap的区别
 - sync map的原理
-    - [refer1](https://blog.csdn.net/weixin_42663840/article/details/107958274)
-    - [refer2](https://blog.csdn.net/u011957758/article/details/96633984?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522164515668616781683951530%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=164515668616781683951530&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-1-96633984.pc_search_result_positive&utm_term=golang+syncmap&spm=1018.2226.3001.4187)
+  - [refer1](https://blog.csdn.net/weixin_42663840/article/details/107958274)
+  - [refer2](https://blog.csdn.net/u011957758/article/details/96633984?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522164515668616781683951530%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=164515668616781683951530&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-1-96633984.pc_search_result_positive&utm_term=golang+syncmap&spm=1018.2226.3001.4187)
 - Go 如何高效地拼接字符串 ?
 
 - [github他人收集](https://github.com/KeKe-Li/data-structures-questions/blob/master/src/chapter05/golang.01.md#Go%E4%B8%AD%E7%9A%84%E9%94%81%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0)
 - 怎么设计一个无锁的pool
+
 ## GMP
+
 - GMP什么时候回创建新的M，创建有数量限制吗
 - 阻塞GM绑定之后就回去寻找新的M吗
 - goroutine是什么，怎么执行
-    - goroutine是比线程还轻量的执行单位，是用户层面的
-    - 一个gourontine大约3kb左右
-    - 上下文切换成本小
-    - goroutine GMP模型，M：N模型
-    - 如果可以聊聊goroutine的生老病死
+  - goroutine是比线程还轻量的执行单位，是用户层面的
+  - 一个gourontine大约3kb左右
+  - 上下文切换成本小
+  - goroutine GMP模型，M：N模型
+  - 如果可以聊聊goroutine的生老病死
 - goroutine切换的原理
-    - 网络io阻塞主动切换，cpu占用时间过长信号切换，锁，channel
+  - 网络io阻塞主动切换，cpu占用时间过长信号切换，锁，channel
 - GO的GPM模型?P和M的数量怎么决定？如果在K8S容器部署，P和M又会有什么不同？
 - GMP模型？全局队列没有g了，怎么办
-    - 去其他p的g队列偷取
-- goroutine的亲缘性怎么体现出来
-
-- Golang中需要使用协程池吗？为什么？
-- goroutine为啥不设置id
+  - 去其他p的g队列偷取
+- goroutine的亲缘性怎么体现出来  context
+- Golang中需要使用协程池吗？为什么？ 需要，虽然协程清理，但也经不住频繁的创建和销毁，减轻gc压力
+- goroutine为啥不设置id  有的，go 开发者防止使用者滥用。
 - 线程模型有哪些？为什么 Go Scheduler 需要实现 M:N 的方案？Go Scheduler 由哪些元素构成呢？
+  - 1 ： 1； 1：M，M:N
+  - m0、g0、sysmon
+
 ## Test
+
 - go项目如何左覆盖率测试
-    - go test ./... -v -gcflags=-l -p 1 -coverprofile=coverage.out
+  - go test ./... -v -gcflags=-l -p 1 -coverprofile=coverage.out
 
 ## runtime
-- runtime.GOMAXPROCS(0)表示什么？为什么要这么用？
+
+- runtime.GOMAXPROCS(0)表示什么？为什么要这么用？不设置p的数量，即所有的G直接在M上跑，所有go协程按声明的顺序同步执行。
 
 ## interface
-- interface内部实现原理
-- reflect的用途
-- 指针实现接口和结构体实现接口有什么区别？
-    - [refer](https://mp.weixin.qq.com/s/g-D_eVh-8JaIoRne09bJ3Q)
+
+- interface内部实现原理 
+- reflect的用途  orm、json到struct
+- 指针实现接口和结构体实现接口有什么区别？结构体实现的自带指针的方法，而指针实现的不带非指针的方法。结构体实现的传的是copy，大结构体会导致copy大量内存，好处是不能该自己。指针可以改自己
+  - [refer](https://mp.weixin.qq.com/s/g-D_eVh-8JaIoRne09bJ3Q)
